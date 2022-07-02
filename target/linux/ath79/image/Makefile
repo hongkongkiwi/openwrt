@@ -8,14 +8,6 @@ DEVICE_VARS += LOADER_FLASH_MAX LOADER_KERNEL_MAGIC
 DEVICE_VARS += NETGEAR_BOARD_ID NETGEAR_HW_ID
 DEVICE_VARS += RAS_BOARD RAS_ROOTFS_SIZE RAS_VERSION
 
-define Build/combined-image
-	sh $(TOPDIR)/scripts/combined-image.sh \
-		"$(IMAGE_KERNEL)" \
-		"$@" \
-		"$@.new"
-	@mv $@.new $@
-endef
-
 define Build/loader-common
 	rm -rf $@.src
 	$(MAKE) -C lzma-loader \
@@ -27,14 +19,17 @@ define Build/loader-common
 endef
 
 define Build/loader-kernel
-	$(call Build/loader-common,LOADER_DATA="$@")
+	$(call Build/loader-common, \
+		LOADER_DATA="$@" \
+		BOARD="$(DEVICE_NAME)" )
 endef
 
 define Build/loader-okli-compile
 	$(call Build/loader-common, \
 		FLASH_OFFS=$(LOADER_FLASH_OFFS) \
 		FLASH_MAX=$(LOADER_FLASH_MAX) \
-		KERNEL_MAGIC=$(LOADER_KERNEL_MAGIC) )
+		KERNEL_MAGIC=$(LOADER_KERNEL_MAGIC) \
+		BOARD="$(DEVICE_NAME)" )
 endef
 
 # Arguments: <output name> <kernel offset>
@@ -102,6 +97,7 @@ endif
 ifeq ($(SUBTARGET),tiny)
 include tiny-netgear.mk
 include tiny-tp-link.mk
+include tiny-ubnt.mk
 endif
 
 $(eval $(call BuildImage))
